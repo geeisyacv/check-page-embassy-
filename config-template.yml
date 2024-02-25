@@ -1,0 +1,10 @@
+# gmail configuration
+gmail:
+  username: ""
+  password: ""
+  host: "smtp.gmail.com"
+  port: 465
+email:
+  to: ""
+  subject: "Notification Cita consular"
+  body: "Cita consular is online at: "
