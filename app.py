@@ -1,9 +1,7 @@
-from email import message
 import requests
 import smtplib
 from email.mime.text import MIMEText
 import yaml
-import schedule
 import time
 from datetime import datetime
 from bs4 import BeautifulSoup
