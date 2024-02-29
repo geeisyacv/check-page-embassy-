@@ -5,13 +5,16 @@ import yaml
 import time
 from datetime import datetime
 from bs4 import BeautifulSoup
+import logging
 
+logging.basicConfig(filename='app.log', level=logging.INFO)
 
 # Replace 'https://example.com' with the URL of the page you want to check
 url_base = "https://www.citaconsular.es/es/hosteds/widgetdefault/2096463e6aff35e340c87439bc59e410c/bkt859859"
 headers = {
     "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 11_0 like Mac OS X) AppleWebKit/604.1.38 (KHTML, like Gecko) Version/11.0 Mobile/15A372 Safari/604.1"
 }
+
 
 def load_config(filepath="config.yml"):
     """Load configuration from a YAML file.
@@ -26,11 +29,14 @@ def load_config(filepath="config.yml"):
         with open(filepath, "r") as stream:
             return yaml.safe_load(stream)
     except yaml.YAMLError as exc:
+        logging.critical(f"Error loading YAML config: {exc}")
         print(f"Error loading YAML config: {exc}")
         return None
     except FileNotFoundError:
+        logging.critical(f"Configuration file not found: {filepath}")
         print(f"Configuration file not found: {filepath}")
         return None
+
 
 # url_base = 'https://example.com'
 def send_email(config, subject, recipient_email, body):
@@ -62,17 +68,18 @@ def check_page_online(url, headers):
     try:
         response = requests.get(url, headers=headers)
         response.raise_for_status()  # Will raise an HTTPError if the HTTP request returned an unsuccessful status code
-        
+
         html_content = response.content
         soup = BeautifulSoup(html_content, "html.parser")
         title = soup.title.text if soup.title else None
         return title
-
     except requests.HTTPError as http_err:
+        logging.critical(f"HTTP error occurred: {http_err}")
         print(f"The page {url} is not online. HTTP error occurred: {http_err}")
     except requests.RequestException as req_err:
+        logging.critical(f"Request error occurred: {req_err}")
         print(f"An error occurred: {req_err}")
-    
+
     return None
 
 
@@ -88,18 +95,21 @@ def send_notification_email(
 def main():
     config = load_config()
     if not config:
+        logging.warning("Failed to load configuration.")
         print("Failed to load configuration.")
         return
 
     while True:
-        page_content = check_page_online(url_base,headers)
+        page_content = check_page_online(url_base, headers)
         if page_content:
+            logging.info("The page is online. " + str(datetime.now()))
             print("The page is online. " + str(datetime.now()))
             send_notification_email(config)
         else:
-            print("The page isn't online." + str(datetime.now()))
+            logging.error("The page isn't online. " + str(datetime.now()))
+            print("The page isn't online. " + str(datetime.now()))
 
-        time.sleep(180)  # Sleep for 3 minutes
+        time.sleep(120)  # Sleep for 3 minutes
 
 
 if __name__ == "__main__":
